@@ -32,19 +32,20 @@ class MiTangBox(QApplication):
     #self.length = 0
     self.window = uic.loadUi("./MiTangBox.ui")
     self.window.setStyleSheet("background-color : black; color : white;");
-    self.window.resize(320, 240)
+
     self.window.show()
 
-    self.mainArea = self.window.findChild(QLabel, 'artwork')
-    self.bottomArea = self.window.findChild(QLabel, 'title')
+    self.mainArea = self.window.findChild(QLabel, 'main')
 
+    # Main thread starting
     self._initialize_display()
     #self._watching()
-    #self.window.destroyed.connect(self.quit)
+    # Main ending
+
+    self.window.destroyed.connect(self.quit)
 
   def _initialize_display(self):
      self._set_metadata("artwork=default.jpg\n")
-     self._set_metadata("title=MiTang Go\n")
 
   def _watching(self):
 
@@ -82,9 +83,6 @@ class MiTangBox(QApplication):
                     self.mainArea.setPixmap(pixmap.scaledToWidth(200))
                 else:
                     self.mainArea.setPixmap(pixmap.scaledToHeight(200))
-        elif key == "title": # doing title
-            if value is not None:
-                self.bottomArea.setText(value)
 
     except Exception as e:
         self.log.info("ignore:" + line)
@@ -92,7 +90,6 @@ class MiTangBox(QApplication):
 
   def _clear_display(self):
     self.mainArea.clear()
-    self.bottomArea.clear()
 
 if (__name__ == "__main__"):
   client = MiTangBox(sys.argv)
