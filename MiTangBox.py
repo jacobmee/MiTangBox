@@ -14,12 +14,43 @@ import time
 import logging
 import subprocess
 import select
+import threading
+
+
+
+class myThread(threading.Thread):
+    def __init__(self, func):
+        threading.Thread.__init__(self)
+        self.log = logging.getLogger("MiTangBox-theading")
+        self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
+        self.handler = logging.StreamHandler(stream=sys.stdout)
+        self.handler.setFormatter(self.format)
+        self.handler.setLevel(logging.DEBUG)
+        self.log.addHandler(self.handler)
+        self.log.setLevel(logging.DEBUG)
+        self.func = func
+
+
+    def run(self):
+        self.log.debug("Watching starts")
+        # Reading from file
+        f = subprocess.Popen(['cat','',"/home/pi/metadata/now_playing"],\
+            stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        p = select.poll()
+        p.register(f.stdout)
+
+        while True:
+            if p.poll(1):
+                l = f.stdout.readline()
+                # self.log.debug(l)
+                self.func(l.decode('utf8'))
+            time.sleep(0.5)
+
+
 
 class MiTangBox(QApplication):
-
   def __init__(self, argv):
     super().__init__(argv)
-
     self.log = logging.getLogger("MiTangBox-display")
     self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
     self.handler = logging.StreamHandler(stream=sys.stdout)
@@ -34,62 +65,49 @@ class MiTangBox(QApplication):
     self.window.setStyleSheet("background-color : black; color : white;");
 
     self.window.show()
-
     self.mainArea = self.window.findChild(QLabel, 'main')
 
-    # Main thread starting
     self._initialize_display()
-    #self._watching()
-    # Main ending
 
+    # theading starts
+    thread1 = myThread(self._set_metadata)
+    thread1.start()
+    # theading ends
     self.window.destroyed.connect(self.quit)
 
+
   def _initialize_display(self):
-     self._set_metadata("artwork=default.jpg\n")
+     self._set_metadata("artwork=default.jpg")
 
-  def _watching(self):
-
-    # Reading from file
-    f = subprocess.Popen(['cat','',"/home/pi/metadata/now_playing"],\
-        stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    p = select.poll()
-    p.register(f.stdout)
-
-    while True:
-        if p.poll(1):
-            l = f.stdout.readline()
-            #self.log.info(l)
-            self._set_metadata(l.decode('utf8'))
-            #sys.stdout.write()
-        time.sleep(1)
 
   def _set_metadata(self, line):
     line = line.rstrip("\n")
-
-    size = self.window.size();
-    artwork = None
-    title = None
+    if line is None:
+        return
 
     # What's the incoming message?
     try:
         key, value = line.split("=")
-        self.log.debug("["+key+"]:" + value)
-
-        # Post to UI
-        if key == "artwork": # doing artwork
-            if value is not None:
-                pixmap = QPixmap("/home/pi/metadata/"+value)
-                if pixmap.width() >= pixmap.height():
-                    self.mainArea.setPixmap(pixmap.scaledToWidth(200))
-                else:
-                    self.mainArea.setPixmap(pixmap.scaledToHeight(200))
-
     except Exception as e:
-        self.log.info("ignore:" + line)
+        return
+
+    # self.log.debug("["+key+"]:" + value)
+
+    # Post to UI
+    if key == "artwork": # doing artwork
+        if value is not None:
+            artwork_path = "/home/pi/metadata/"+value
+            self.log.debug("Artwork:" + artwork_path)
+            pixmap = QPixmap(artwork_path)
+            if pixmap.width() >= pixmap.height():
+                self.mainArea.setPixmap(pixmap.scaledToWidth(200))
+            else:
+                self.mainArea.setPixmap(pixmap.scaledToHeight(200))
 
 
   def _clear_display(self):
     self.mainArea.clear()
+
 
 if (__name__ == "__main__"):
   client = MiTangBox(sys.argv)
