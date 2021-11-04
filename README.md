@@ -7,7 +7,7 @@ This project is to create a tiny music box starting with
 4) Ampfiler ($2)
 5) Matrix 2.8 screen with SPI support ($10)
 6) Two trumpets ($15)
-
+7) 
 to enable
 1) Roon Bridge
 2) Airplay 2
@@ -20,6 +20,7 @@ Software using
 
 If you have 3D print, you can also use STL files and Blender sources.
 
-Enjoy!
 
+
+Enjoy!
 Jacob
