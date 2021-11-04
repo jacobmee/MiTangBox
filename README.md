@@ -26,4 +26,4 @@ If you have 3D print, you can also use STL files and Blender sources.
 
 
 Enjoy!
-Jacob
+Jacob (jacobmee@gmail.com)
