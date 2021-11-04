@@ -20,6 +20,7 @@ Software using
 
 If you have 3D print, you can also use STL files and Blender sources.
 
+![alt text](http://url/to/img.png)
 
 
 Enjoy!
