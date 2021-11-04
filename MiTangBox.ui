@@ -2,6 +2,12 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,11 +19,14 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="autoFillBackground">
+   <bool>true</bool>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="main">
     <property name="geometry">
      <rect>
-      <x>25</x>
+      <x>30</x>
       <y>0</y>
       <width>240</width>
       <height>240</height>
@@ -36,9 +45,6 @@
     </property>
     <property name="text">
      <string/>
-    </property>
-    <property name="scaledContents">
-     <bool>true</bool>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>

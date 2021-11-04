@@ -104,11 +104,14 @@ class myThread(threading.Thread):
             elif item.code == "pcen":
                 # send artwork when all data is received
                 self.func(self.artwork)
+                #self.log.info("Artwork is done:" + self.artwork)
             elif item.code == "mden":
                 # only send updates if required
                 #if not (self._tmp_track_info.items() <= self.track_info.items()):
                 self.track_info = self._tmp_track_info
                 self._tmp_track_info = {}
+            elif item.code == "pend":
+                self.func("./default.jpg")
             # else:
             #     self.log.debug("Unknown (ssnc) code \"%s\", with base64 data %s.", item.code,
             #                    item.data_base64)
@@ -131,6 +134,7 @@ class myThread(threading.Thread):
 class mitangbox(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
+
         self.log = logging.getLogger("MiTangBox-display")
         self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
         self.handler = logging.StreamHandler(stream=sys.stdout)
@@ -139,11 +143,12 @@ class mitangbox(QApplication):
         self.log.addHandler(self.handler)
         self.log.setLevel(logging.DEBUG)
 
+
         #self.length = 0
         self.window = uic.loadUi("./mitangbox.ui")
         self.window.setStyleSheet("background-color : black; color : white;");
+        self.window.showFullScreen();
 
-        self.window.show()
         self.mainArea = self.window.findChild(QLabel, 'main')
 
         self._set_metadata("./default.jpg")
@@ -155,9 +160,20 @@ class mitangbox(QApplication):
 
 
     def _set_metadata(self,artwork_path):
-        self.log.info("Artwork:" + artwork_path)
+        if artwork_path is None:
+            return
+
         pixmap = QPixmap(artwork_path)
-        self.mainArea.setPixmap(pixmap.scaledToWidth(240))
+        if pixmap is None:
+            return
+
+        if pixmap.width() > 100:
+            self.log.info("Artwork:" + artwork_path)
+            #self.log.info("width:" + str(pixmap.width()) +", height:"+str(pixmap.height()))
+            if pixmap.width() > pixmap.height():
+                self.mainArea.setPixmap(pixmap.scaledToWidth(240))
+            else:
+                self.mainArea.setPixmap(pixmap.scaledToHeight(240))
 
 
 if (__name__ == "__main__"):
