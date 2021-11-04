@@ -2,7 +2,7 @@
 
 This project is to create a tiny music box starting with 
 1) NanoPi ($15)
-2) A USB WIFI reciever - RTL8188CUS ($3)
+2) A USB WIFI reciever - COMFAST 811AC ($5)
 3) DAC - PCM5201a ($2)
 4) Ampfiler ($2)
 5) Matrix 2.8 screen with SPI support ($10)
