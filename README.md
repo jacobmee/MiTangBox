@@ -2,10 +2,11 @@
 
 This project is to create a tiny music box starting with 
 1) NanoPi ($15)
-2) DAC - PCM5201a ($2)
-3) Ampfiler ($2)
-4) Matrix 2.8 screen with SPI support ($10)
-5) Two trumpets ($15))
+2) A USB WIFI reciever - RTL8188CUS ($3)
+3) DAC - PCM5201a ($2)
+4) Ampfiler ($2)
+5) Matrix 2.8 screen with SPI support ($10)
+6) Two trumpets ($15)
 
 to enable
 1) Roon Bridge
