@@ -191,14 +191,9 @@ class RoonWatcher(threading.Thread):
         self.roonapi.register_state_callback(self._watching)
 
     def run(self):
-        sleep (10)
         with open("mytokenfile", "w") as f:
             f.write(self.roonapi.token)
         self.log.info("mytokenfile is updated")
-
-        while True:
-            sleep(600)
-            self.log.info("Roon watcher timechecks")
 
 
 class mitangbox(QApplication):

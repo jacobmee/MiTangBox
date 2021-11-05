@@ -1,0 +1,12 @@
+[Unit]
+Description=mitangbox.service
+After=roonbridge.service shairport-sync.service
+
+[Service]
+ExecStart=/bin/sh /home/pi/mitangbox/start.sh
+Type=oneshot
+RemainAfterExit=yes
+User=pi
+
+[Install]
+WantedBy=multi-user.target
