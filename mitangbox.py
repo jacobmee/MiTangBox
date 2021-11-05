@@ -16,10 +16,12 @@ import logging
 import subprocess
 import select
 import threading
-from item import Item
+from airplay.item import Item
+from roonapi.roonapi import RoonApi
+import requests
 import stat
-from util import write_data_to_image
-from codetable import CORE, SSNC, CORE_CODE_DICT, SSNC_CODE_DICT
+from airplay.util import write_data_to_image
+from airplay.codetable import CORE, SSNC, CORE_CODE_DICT, SSNC_CODE_DICT
 
 CORE_CODE_WHITELIST = {'mikd', 'minm', 'mper', 'miid', 'asal', 'asar', 'ascm', 'asco', 'asbr', 'ascp', 'asda', 'aspl',
                        'asdm', 'asdc', 'asdn', 'aseq', 'asgn', 'asdt', 'asrv', 'assr', 'assz', 'asst', 'assp', 'astm',
@@ -29,10 +31,10 @@ CORE_CODE_WHITELIST = {'mikd', 'minm', 'mper', 'miid', 'asal', 'asar', 'ascm', '
 
 
 
-class myThread(threading.Thread):
+class ShairportWatcher(threading.Thread):
     def __init__(self, func):
         threading.Thread.__init__(self)
-        self.log = logging.getLogger("MiTangBox-theading")
+        self.log = logging.getLogger("MiTangBox-Shairport-theading")
         self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
         self.handler = logging.StreamHandler(stream=sys.stdout)
         self.handler.setFormatter(self.format)
@@ -131,6 +133,74 @@ class myThread(threading.Thread):
         self.item = item
 
 
+class RoonWatcher(threading.Thread):
+
+    def _watching(self, event, changed_ids):
+        # get target zone output_id
+        zones = self.roonapi.zones
+        for output in zones.values():
+            if output["display_name"] == self.target_zone:
+                if output["state"] == "playing":
+                    current_image_key = output["now_playing"]["image_key"]
+                    if current_image_key != self.image_key:
+                        self.log.info("New Playing:" + output["now_playing"]["one_line"]["line1"])
+                        self.log.info("New image:" + current_image_key)
+                        self.image_key = current_image_key
+                        # http://192.168.0.21:9100/api/image/f1b0059ad5ef45caaed0417103ea0505
+                        url = 'http://192.168.0.21:9100/api/image/'
+                        r = requests.get(url+current_image_key, allow_redirects=True)
+                        file = "/tmp/roon_"+current_image_key+".jpg"
+                        open(file, 'wb').write(r.content)
+                        self.func(file)
+                else:
+                    self.func("./default.jpg")
+
+
+
+    def __init__(self, func):
+        threading.Thread.__init__(self)
+        self.log = logging.getLogger("MiTangBox-Roon-theading")
+        self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
+        self.handler = logging.StreamHandler(stream=sys.stdout)
+        self.handler.setFormatter(self.format)
+        self.handler.setLevel(logging.DEBUG)
+        self.log.addHandler(self.handler)
+        self.log.setLevel(logging.DEBUG)
+        self.func = func
+
+        self.server = "192.168.0.21"
+        self.target_zone = "MiTang Go"
+        self.image_key = None
+        self.appinfo = {
+            "extension_id": "python_roon_reader",
+            "display_name": "Roon Reader",
+            "display_version": "1.0.0",
+            "publisher": "jacob",
+            "email": "jacob@mitang.me",
+        }
+
+        # Can be None if you don't yet have a token
+        try:
+            self.token = open("mytokenfile").read()
+        except Exception as e:
+            self.token = None
+
+        # Take a look at examples/discovery if you want to use discovery.
+        self.roonapi = RoonApi(self.appinfo, self.token, self.server)
+        # receive state updates in your callback
+        self.roonapi.register_state_callback(self._watching)
+
+    def run(self):
+        sleep (10)
+        with open("mytokenfile", "w") as f:
+            f.write(self.roonapi.token)
+        self.log.info("mytokenfile is updated")
+
+        while True:
+            sleep(600)
+            self.log.info("Roon watcher timechecks")
+
+
 class mitangbox(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
@@ -154,8 +224,13 @@ class mitangbox(QApplication):
         self._set_metadata("./default.jpg")
 
         # theading starts
-        thread1 = myThread(self._set_metadata)
+        thread1 = ShairportWatcher(self._set_metadata)
         thread1.start()
+        # theading ends
+
+        # theading starts
+        thread2 = RoonWatcher(self._set_metadata)
+        thread2.start()
         # theading ends
 
 
