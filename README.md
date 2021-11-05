@@ -1,4 +1,4 @@
-# mitangbox
+# MiTang Box
 
 This project is to create a tiny music box starting with 
 1) NanoPi ($15)
@@ -16,13 +16,21 @@ to enable
 
 with the cose under $50.
 
-Software using
+# Software using
 1) Roon Bridge from Roon https://roonlabs.com/
 2) Shairport Sync https://github.com/mikebrady/shairport-sync
 
 If you have 3D print, you can also use STL files and Blender sources.
 
 ![The Box](https://github.com/jacobmee/mitangbox/blob/master/musicbox.JPG)
+
+
+# Spec
+* 32-bit, 384kHz PCM 
+* Max power 20w per channel (12v * 4A)
+* Airplay 2
+* Roon Ready
+* Dimension (hwd) 8 x 8 x 21
 
 
 Enjoy!
