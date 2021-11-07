@@ -34,13 +34,7 @@ CORE_CODE_WHITELIST = {'mikd', 'minm', 'mper', 'miid', 'asal', 'asar', 'ascm', '
 class ShairportWatcher(threading.Thread):
     def __init__(self, func):
         threading.Thread.__init__(self)
-        self.log = logging.getLogger("MiTangBox-Shairport-theading")
-        self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
-        self.handler = logging.StreamHandler(stream=sys.stdout)
-        self.handler.setFormatter(self.format)
-        self.handler.setLevel(logging.DEBUG)
-        self.log.addHandler(self.handler)
-        self.log.setLevel(logging.DEBUG)
+        self.log = logging.getLogger("MiTangBox")
         self.func = func
 
 
@@ -142,30 +136,23 @@ class RoonWatcher(threading.Thread):
             if output["display_name"] == self.target_zone:
                 if output["state"] == "playing":
                     current_image_key = output["now_playing"]["image_key"]
-                    if current_image_key != self.image_key:
-                        self.log.info("New Playing:" + output["now_playing"]["one_line"]["line1"])
-                        self.log.info("New image:" + current_image_key)
-                        self.image_key = current_image_key
-                        # http://192.168.0.21:9100/api/image/f1b0059ad5ef45caaed0417103ea0505
+                    if self.image_key != current_image_key:
+                        self.log.info("Playing:" + output["now_playing"]["one_line"]["line1"])
                         url = 'http://192.168.0.21:9100/api/image/'
-                        r = requests.get(url+current_image_key, allow_redirects=True)
+                        r = requests.get(url+current_image_key+"?scale=fit&width=240&height=240&format=image/jpeg", allow_redirects=True)
                         file = "/tmp/roon_"+current_image_key+".jpg"
                         open(file, 'wb').write(r.content)
                         self.func(file)
+                        self.image_key = current_image_key
                 else:
                     self.func("./default.jpg")
+                    self.image_key = None
 
 
 
     def __init__(self, func):
         threading.Thread.__init__(self)
-        self.log = logging.getLogger("MiTangBox-Roon-theading")
-        self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
-        self.handler = logging.StreamHandler(stream=sys.stdout)
-        self.handler.setFormatter(self.format)
-        self.handler.setLevel(logging.DEBUG)
-        self.log.addHandler(self.handler)
-        self.log.setLevel(logging.DEBUG)
+        self.log = logging.getLogger("MiTangBox")
         self.func = func
 
         self.server = "192.168.0.21"
@@ -200,9 +187,10 @@ class mitangbox(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
 
-        self.log = logging.getLogger("MiTangBox-display")
+        self.log = logging.getLogger("MiTangBox")
         self.format = logging.Formatter('%(asctime)s - [%(levelname)s] - %(message)s', "%Y-%m-%d %H:%M:%S")
-        self.handler = logging.StreamHandler(stream=sys.stdout)
+        self.handler = logging.FileHandler("./mitangbox.log")
+        #self.handler = logging.StreamHandler(stream=sys.stdout)
         self.handler.setFormatter(self.format)
         self.handler.setLevel(logging.DEBUG)
         self.log.addHandler(self.handler)
@@ -231,15 +219,16 @@ class mitangbox(QApplication):
 
     def _set_metadata(self,artwork_path):
         if artwork_path is None:
+            self.log.info("Artwork is None?" )
             return
 
         pixmap = QPixmap(artwork_path)
-        if pixmap is None:
+        if pixmap is None or pixmap.width() == 0:
+            self.log.info("Invalid image:"+artwork_path )
             return
 
         if pixmap.width() > 100:
-            self.log.info("Artwork:" + artwork_path)
-            #self.log.info("width:" + str(pixmap.width()) +", height:"+str(pixmap.height()))
+            self.log.info("Update artwork:" + artwork_path)
             if pixmap.width() > pixmap.height():
                 self.mainArea.setPixmap(pixmap.scaledToWidth(240))
             else:
