@@ -145,8 +145,10 @@ class RoonWatcher(threading.Thread):
                         self.func(file)
                         self.image_key = current_image_key
                 else:
-                    self.func("./default.jpg")
-                    self.image_key = None
+                    if self.image_key != None:
+                        self.log.info("State:" + output["state"])
+                        self.func("./default.jpg")
+                        self.image_key = None
 
 
 
