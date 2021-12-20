@@ -138,7 +138,7 @@ class RoonWatcher(threading.Thread):
                     current_image_key = output["now_playing"]["image_key"]
                     if self.image_key != current_image_key:
                         self.log.info("Playing:" + output["now_playing"]["one_line"]["line1"])
-                        url = 'http://192.168.0.21:9100/api/image/'
+                        url = "http://" + self.server + ":" + self.port + "/api/image/"
                         r = requests.get(url+current_image_key+"?scale=fit&width=240&height=240&format=image/jpeg", allow_redirects=True)
                         file = "/tmp/roon_"+current_image_key+".jpg"
                         open(file, 'wb').write(r.content)
@@ -158,6 +158,7 @@ class RoonWatcher(threading.Thread):
         self.func = func
 
         self.server = "192.168.0.21"
+        self.port = "9330"
         self.target_zone = "MiTang Go"
         self.image_key = None
         self.appinfo = {
@@ -175,7 +176,7 @@ class RoonWatcher(threading.Thread):
             self.token = None
 
         # Take a look at examples/discovery if you want to use discovery.
-        self.roonapi = RoonApi(self.appinfo, self.token, self.server)
+        self.roonapi = RoonApi(self.appinfo, self.token, self.server, self.port)
         # receive state updates in your callback
         self.roonapi.register_state_callback(self._watching)
 
